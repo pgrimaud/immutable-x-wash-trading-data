@@ -52,4 +52,13 @@ class CollectionRepository extends ServiceEntityRepository
             ->getQuery()
             ->getArrayResult());
     }
+
+    public function findWithoutName()
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.name = :empty')
+            ->setParameter('empty', '')
+            ->getQuery()
+            ->getResult();
+    }
 }

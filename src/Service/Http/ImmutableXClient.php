@@ -37,4 +37,13 @@ class ImmutableXClient
 
         return $response->toArray();
     }
+
+    public function getCollection(string $address): array
+    {
+        $endpoint = '/v1/collections/' . $address;
+
+        $response = $this->client->request('GET', $endpoint);
+
+        return $response->toArray();
+    }
 }

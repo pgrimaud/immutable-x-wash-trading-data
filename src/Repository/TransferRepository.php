@@ -39,28 +39,31 @@ class TransferRepository extends ServiceEntityRepository
         }
     }
 
-//    /**
-//     * @return Transfer[] Returns an array of Transfer objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('t')
-//            ->andWhere('t.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('t.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function optimizedSave(
+        string $sender,
+        string $receiver,
+        string $timestamp,
+        int $transactionId,
+        int $assetId = null,
+        string $quantity = '1',
+        string $token = ''
+    ): void {
 
-//    public function findOneBySomeField($value): ?Transfer
-//    {
-//        return $this->createQueryBuilder('t')
-//            ->andWhere('t.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        $connection = $this->getEntityManager()->getConnection();
+
+        $sql = 'INSERT IGNORE INTO `transfer` 
+                (`asset_id`, `quantity`, `token`, `sender`, `receiver`, `date`, `internal_id`) 
+                VALUES (:assetId, :quantity, :token, :sender, :receiver, :date, :transaction_id)';
+
+        $stmt = $connection->prepare($sql);
+        $stmt->executeQuery([
+            'assetId' => $assetId,
+            'quantity' => $quantity,
+            'token' => $token,
+            'sender' => $sender,
+            'receiver' => $receiver,
+            'date' => $timestamp,
+            'transaction_id' => $transactionId,
+        ]);
+    }
 }

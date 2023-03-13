@@ -39,28 +39,33 @@ class AssetRepository extends ServiceEntityRepository
         }
     }
 
-//    /**
-//     * @return Asset[] Returns an array of Asset objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('a')
-//            ->andWhere('a.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('a.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function findOptimizedAssetsByCollection(): array
+    {
+        return call_user_func_array(function (...$items) {
+            $results = [];
+            foreach ($items as $item) {
+                $results[$item['address']][$item['tokenId']] = (int)$item['id'];
+            }
+            return $results;
+        }, $this->createQueryBuilder('a')
+            ->select('a.id, a.tokenId, c.address')
+            ->join('a.collection', 'c')
+            ->getQuery()
+            ->getArrayResult());
+    }
 
-//    public function findOneBySomeField($value): ?Asset
-//    {
-//        return $this->createQueryBuilder('a')
-//            ->andWhere('a.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function optimizedSave(int $collectionId, string $assetTokenId): int
+    {
+        $connection = $this->getEntityManager()->getConnection();
+
+        $sql = 'INSERT INTO `asset` (`collection_id`, `token_id`) VALUES (:collectionId, :assetTokenId)';
+
+        $stmt = $connection->prepare($sql);
+        $stmt->executeQuery([
+            'collectionId' => $collectionId,
+            'assetTokenId' => $assetTokenId,
+        ]);
+
+        return (int)$connection->lastInsertId();
+    }
 }

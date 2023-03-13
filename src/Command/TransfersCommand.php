@@ -3,6 +3,9 @@
 namespace App\Command;
 
 use App\Entity\Collection;
+use App\Helper\TokenHelper;
+use App\Repository\AssetRepository;
+use App\Repository\TransferRepository;
 use App\Service\Http\ImmutableXClient;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -20,13 +23,17 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class TransfersCommand extends Command
 {
     private array $collections;
+    private array $assets;
 
     public function __construct(
         private readonly ImmutableXClient $immutableXClient,
         private readonly EntityManagerInterface $entityManager,
+        private readonly AssetRepository $assetRepository,
+        private readonly TransferRepository $transferRepository,
     ) {
 
         $this->collections = [];
+        $this->assets = [];
 
         parent::__construct();
     }
@@ -44,6 +51,7 @@ class TransfersCommand extends Command
         $date = new \DateTime($dateArg);
 
         $this->collections = $this->entityManager->getRepository(Collection::class)->findOptimizedCollections();
+        $this->assets = $this->assetRepository->findOptimizedAssetsByCollection();
 
         $cursor = null;
         $hasRemaining = 1;
@@ -66,6 +74,11 @@ class TransfersCommand extends Command
                 $progressBar->advance();
                 $progressBar->setMessage($apiResult['transaction_id']);
                 $progressBar->display();
+
+                // discard burn
+                if ($apiResult['receiver'] === '0x0000000000000000000000000000000000000000') {
+                    continue;
+                }
 
                 $this->saveTransfer($apiResult);
 
@@ -92,6 +105,7 @@ class TransfersCommand extends Command
     private function saveTransfer(array $apiResult): void
     {
         if ($apiResult['token']['type'] === 'ERC721') {
+            // check if collection exists
             if (!isset($this->collections[$apiResult['token']['data']['token_address']])) {
                 $collection = new Collection();
                 $collection->setName(''); // fetch later
@@ -104,8 +118,42 @@ class TransfersCommand extends Command
             }
 
             $collectionId = $this->collections[$apiResult['token']['data']['token_address']];
-        } else {
 
+            // check if asset exists
+            $assetTokenId = $apiResult['token']['data']['token_id'];
+
+            if (!isset($this->assets[$apiResult['token']['data']['token_address']][$assetTokenId])) {
+                $assetId = $this->assetRepository->optimizedSave($collectionId, $assetTokenId);
+                $this->assets[$apiResult['token']['data']['token_address']][$assetTokenId] = $assetId;
+            } else {
+                $assetId = $this->assets[$apiResult['token']['data']['token_address']][$assetTokenId];
+            }
+
+            // insert transfer
+            $this->transferRepository->optimizedSave(
+                $apiResult['user'],
+                $apiResult['receiver'],
+                $apiResult['timestamp'],
+                $apiResult['transaction_id'],
+                $assetId,
+            );
+        } else {
+            if ($apiResult['token']['type'] === 'ETH') {
+                $token = 'ETH';
+            } else {
+                $token = TokenHelper::getTokenName($apiResult['token']['data']['token_address']);
+            }
+
+            // insert as ERC20 or ETH transfer
+            $this->transferRepository->optimizedSave(
+                $apiResult['user'],
+                $apiResult['receiver'],
+                $apiResult['timestamp'],
+                $apiResult['transaction_id'],
+                null,
+                $apiResult['token']['data']['quantity'],
+                $token,
+            );
         }
     }
 }

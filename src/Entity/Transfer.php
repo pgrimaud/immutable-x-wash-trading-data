@@ -31,7 +31,7 @@ class Transfer
     #[ORM\Column]
     private ?\DateTimeImmutable $date = null;
 
-    #[ORM\Column]
+    #[ORM\Column(unique: true)]
     private ?int $internalId = null;
 
     public function getId(): ?int
