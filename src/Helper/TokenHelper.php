@@ -11,6 +11,7 @@ class TokenHelper
         'BR' => '0xe21363bf33620a291a6c354dc3bb99e40cb3086b',
         'CMT' => '0xe910c2a090516fb7a7be07f96a464785f2d5dc18',
         'DEV' => '0xa3d59c6d24f428dcfedc09724869e7af4d281fdd',
+        'ETH' => '',
         'GODS' => '0xccc8cb5229b0ac8069c51fd58367fd1e622afd97',
         'GOG' => '0x9ab7bb7fdc60f4357ecfef43986818a2a3569c62',
         'IMX' => '0xf57e7e7c23978c3caec3c3548e3d615c346e79ff',

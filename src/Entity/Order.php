@@ -18,8 +18,8 @@ class Order
     #[ORM\JoinColumn(nullable: false)]
     private ?Asset $asset = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $quantity = null;
+    #[ORM\Column]
+    private ?float  $quantity = null;
 
     #[ORM\Column(length: 255)]
     private ?string $token = null;
@@ -32,6 +32,15 @@ class Order
 
     #[ORM\Column]
     private ?\DateTimeImmutable $date = null;
+
+    #[ORM\Column]
+    private ?int $sellInternalId = null;
+
+    #[ORM\Column]
+    private ?int $buyInternalId = null;
+
+    #[ORM\Column(unique: true)]
+    private ?int $transactionId = null;
 
     public function getId(): ?int
     {
@@ -50,12 +59,12 @@ class Order
         return $this;
     }
 
-    public function getQuantity(): ?string
+    public function getQuantity(): ?float
     {
         return $this->quantity;
     }
 
-    public function setQuantity(string $quantity): self
+    public function setQuantity(float $quantity): self
     {
         $this->quantity = $quantity;
 
@@ -106,6 +115,42 @@ class Order
     public function setDate(\DateTimeImmutable $date): self
     {
         $this->date = $date;
+
+        return $this;
+    }
+
+    public function getSellInternalId(): ?int
+    {
+        return $this->sellInternalId;
+    }
+
+    public function setSellInternalId(int $sellInternalId): self
+    {
+        $this->sellInternalId = $sellInternalId;
+
+        return $this;
+    }
+
+    public function getBuyInternalId(): ?int
+    {
+        return $this->buyInternalId;
+    }
+
+    public function setBuyInternalId(int $buyInternalId): self
+    {
+        $this->buyInternalId = $buyInternalId;
+
+        return $this;
+    }
+
+    public function getTransactionId(): ?int
+    {
+        return $this->transactionId;
+    }
+
+    public function setTransactionId(int $transactionId): self
+    {
+        $this->transactionId = $transactionId;
 
         return $this;
     }

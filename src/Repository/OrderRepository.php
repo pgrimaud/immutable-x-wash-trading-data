@@ -39,28 +39,77 @@ class OrderRepository extends ServiceEntityRepository
         }
     }
 
-//    /**
-//     * @return Order[] Returns an array of Order objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('o')
-//            ->andWhere('o.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('o.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function findTradesToUpdate(\DateTime $date): array
+    {
+        return call_user_func_array(function (...$items) {
+            $results = [];
+            foreach ($items as $item) {
+                if ($item['seller'] === '') {
+                    $results[$item['sellInternalId']] = [
+                        'id' => (int)$item['id'],
+                        'type' => 'seller'
+                    ];
+                }
 
-//    public function findOneBySomeField($value): ?Order
-//    {
-//        return $this->createQueryBuilder('o')
-//            ->andWhere('o.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+                if ($item['buyer'] === '') {
+                    $results[$item['buyInternalId']] = [
+                        'id' => (int)$item['id'],
+                        'type' => 'buyer'
+                    ];
+                }
+            }
+            return $results;
+        }, $this->createQueryBuilder('o')
+            ->select('o.sellInternalId, o.buyInternalId, o.id, o.seller, o.buyer')
+            ->where('o.date LIKE :date')
+            ->andWhere('o.seller = :empty OR o.buyer = :empty')
+            ->setParameter('date', $date->format('Y-m-d') . '%')
+            ->setParameter('empty', '')
+            ->getQuery()
+            ->getArrayResult());
+    }
+
+    public function optimizedTradeSave(
+        mixed $assetId,
+        float $price,
+        string $token,
+        string $timestamp,
+        int $sellInternalId,
+        int $buyInternalId,
+        int $transactionId
+    ) {
+        $connection = $this->getEntityManager()->getConnection();
+
+        $sql = 'INSERT IGNORE INTO `order` 
+                (`asset_id`, `quantity`, `token`, `seller`, `buyer`, `date`, `sell_internal_id`, `buy_internal_id`, `transaction_id`) 
+                VALUES (:assetId, :quantity, :token, :seller, :buyer, :date, :sell_internal_id, :buy_internal_id, :transaction_id)';
+
+        $stmt = $connection->prepare($sql);
+        $stmt->executeQuery([
+            'assetId' => $assetId,
+            'quantity' => $price,
+            'token' => $token,
+            'seller' => '',
+            'buyer' => '',
+            'date' => $timestamp,
+            'sell_internal_id' => $sellInternalId,
+            'buy_internal_id' => $buyInternalId,
+            'transaction_id' => $transactionId,
+        ]);
+    }
+
+    public function updateOrder(string $user, array $order): void
+    {
+        $connection = $this->getEntityManager()->getConnection();
+
+        $sql = 'UPDATE `order` 
+                SET `' . $order['type'] . '` = :user 
+                WHERE `id` = :order_id';
+
+        $stmt = $connection->prepare($sql);
+        $stmt->executeQuery([
+            'user' => $user,
+            'order_id' => $order['id']
+        ]);
+    }
 }

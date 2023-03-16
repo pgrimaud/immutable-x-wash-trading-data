@@ -46,4 +46,34 @@ class ImmutableXClient
 
         return $response->toArray();
     }
+
+    public function getOrders(\DateTime $date, string $cursor = null): array
+    {
+        $endpoint = '/v3/orders?updated_min_timestamp=' . $date->format('Y-m-d') . 'T00:00:00Z' .
+            '&updated_max_timestamp=' . $date->format('Y-m-d') . 'T23:59:59Z' .
+            '&status=filled&order_by=updated_at&direction=asc';
+
+        if ($cursor) {
+            $endpoint .= '&cursor=' . $cursor;
+        }
+
+        $response = $this->client->request('GET', $endpoint);
+
+        return $response->toArray();
+    }
+
+    public function getTrades(\DateTime $date, string $cursor = null)
+    {
+        $endpoint = '/v3/trades?min_timestamp=' . $date->format('Y-m-d') . 'T00:00:00Z' .
+            '&max_timestamp=' . $date->format('Y-m-d') . 'T23:59:59Z' .
+            '&status=success&order_by=created_at&direction=asc';
+
+        if ($cursor) {
+            $endpoint .= '&cursor=' . $cursor;
+        }
+
+        $response = $this->client->request('GET', $endpoint);
+
+        return $response->toArray();
+    }
 }

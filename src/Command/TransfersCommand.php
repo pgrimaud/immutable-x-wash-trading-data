@@ -18,7 +18,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
     name: 'app:transfers',
-    description: 'Fetch transfers from the Immutable',
+    description: 'Fetch transfers from Immutable for a given date',
 )]
 class TransfersCommand extends Command
 {
@@ -95,7 +95,6 @@ class TransfersCommand extends Command
 
             $loop++;
         }
-
 
         $io->success('Done.');
 
