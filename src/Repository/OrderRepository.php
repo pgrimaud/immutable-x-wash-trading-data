@@ -70,14 +70,15 @@ class OrderRepository extends ServiceEntityRepository
     }
 
     public function optimizedTradeSave(
-        mixed $assetId,
-        float $price,
+        mixed  $assetId,
+        float  $price,
         string $token,
         string $timestamp,
-        int $sellInternalId,
-        int $buyInternalId,
-        int $transactionId
-    ) {
+        int    $sellInternalId,
+        int    $buyInternalId,
+        int    $transactionId
+    )
+    {
         $connection = $this->getEntityManager()->getConnection();
 
         $sql = 'INSERT IGNORE INTO `order` 
@@ -111,5 +112,17 @@ class OrderRepository extends ServiceEntityRepository
             'user' => $user,
             'order_id' => $order['id']
         ]);
+    }
+
+    public function findOrder(int $limit, int $offset): array
+    {
+        return $this->createQueryBuilder('o')
+            ->select('o', 'a', 'c')
+            ->join('o.asset', 'a')
+            ->join('a.collection', 'c')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset)
+            ->getQuery()
+            ->getResult();
     }
 }
