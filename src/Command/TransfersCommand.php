@@ -139,9 +139,13 @@ class TransfersCommand extends Command
         } else {
             if ($apiResult['token']['type'] === 'ETH') {
                 $token = 'ETH';
+                $decimals = 18;
             } else {
                 $token = TokenHelper::getTokenName($apiResult['token']['data']['token_address']);
+                $decimals = $apiResult['token']['data']['token_address'] === '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48' ? 6 : 18;
             }
+
+            $quantity = (float)bcdiv($apiResult['token']['data']['quantity'], (string)(10 ** $decimals), 18);
 
             // insert as ERC20 or ETH transfer
             $this->transferRepository->optimizedSave(
@@ -150,7 +154,7 @@ class TransfersCommand extends Command
                 $apiResult['timestamp'],
                 $apiResult['transaction_id'],
                 null,
-                $apiResult['token']['data']['quantity'],
+                $quantity,
                 $token,
             );
         }

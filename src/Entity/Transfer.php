@@ -16,8 +16,8 @@ class Transfer
     #[ORM\ManyToOne(inversedBy: 'transfers')]
     private ?Asset $asset = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $quantity = null;
+    #[ORM\Column]
+    private ?float $quantity = null;
 
     #[ORM\Column(length: 255)]
     private ?string $token = null;
@@ -32,7 +32,7 @@ class Transfer
     private ?\DateTimeImmutable $date = null;
 
     #[ORM\Column(unique: true)]
-    private ?int $internalId = null;
+    private ?int $transactionId = null;
 
     public function getId(): ?int
     {
@@ -51,12 +51,12 @@ class Transfer
         return $this;
     }
 
-    public function getQuantity(): ?string
+    public function getQuantity(): ?float
     {
         return $this->quantity;
     }
 
-    public function setQuantity(string $quantity): self
+    public function setQuantity(float $quantity): self
     {
         $this->quantity = $quantity;
 
@@ -111,14 +111,14 @@ class Transfer
         return $this;
     }
 
-    public function getInternalId(): ?int
+    public function getTransactionId(): ?int
     {
-        return $this->internalId;
+        return $this->transactionId;
     }
 
-    public function setInternalId(int $internalId): self
+    public function setTransactionId(int $transactionId): self
     {
-        $this->internalId = $internalId;
+        $this->transactionId = $transactionId;
 
         return $this;
     }

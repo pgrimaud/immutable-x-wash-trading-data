@@ -52,7 +52,7 @@ class TransferRepository extends ServiceEntityRepository
         $connection = $this->getEntityManager()->getConnection();
 
         $sql = 'INSERT IGNORE INTO `transfer` 
-                (`asset_id`, `quantity`, `token`, `sender`, `receiver`, `date`, `internal_id`) 
+                (`asset_id`, `quantity`, `token`, `sender`, `receiver`, `date`, `transaction_id`) 
                 VALUES (:assetId, :quantity, :token, :sender, :receiver, :date, :transaction_id)';
 
         $stmt = $connection->prepare($sql);
